@@ -16,25 +16,32 @@
 
 ## 安装
 
-需要：python3 ≥ 3.9；Claude Code ≥ 2.1.274（仅插件需要）。一条命令装全部：
+需要：python3 ≥ 3.9；Claude Code ≥ 2.1.274（仅插件需要）。**复制下面整段执行即可**：
 
 ```sh
-git clone <this repo> && cd jevcomp
-bash install.sh              # CLI + skill + Claude Code 插件 + settings env（自动备份）
-bash install.sh --cli-only   # 只要 CLI + skill
+git clone https://github.com/liqunqun07/jevcomp.git && cd jevcomp && bash install.sh
+```
+
+装的内容：CLI + skill + zcode/Codex/Claude Code 三端 MCP 注册 + LaunchAgent 定时压缩 +
+Claude Code 插件（写入 settings env 前自动备份）。脚本会提示输入 TypeSafe API key
+（也可提前 `export TYPESAFE_API_KEY=<key>`）。可选参数：
+
+```sh
+bash install.sh --cli-only   # 只要 CLI + skill（不装插件/定时任务）
 bash install.sh --no-pip     # 不动 pip
 ```
 
 或分步手动：
 
 ```sh
+git clone https://github.com/liqunqun07/jevcomp.git && cd jevcomp
 # 1) CLI（任意目录可用 jevcomp 命令）
 python3 -m pip install --user .
 # 2) skill（Claude Code 读 ~/.claude/skills，其他 agent 读 ~/.agents/skills）
 cp -R skill ~/.agents/skills/jev-compaction && ln -sfn ~/.agents/skills/jev-compaction ~/.claude/skills/jev-compaction
-# 3) Claude Code 插件
-claude plugin marketplace add <本仓库路径> && claude plugin install jevcomp@jevcomp
-# 并在 ~/.claude/settings.json 的 env 加: CLAUDE_CODE_ENABLE_FUNCTION_HOOKS=1, TYPESAFE_API_KEY=<key>
+# 3) Claude Code 插件（marketplace 直接用 GitHub 仓库）
+claude plugin marketplace add liqunqun07/jevcomp && claude plugin install jevcomp@jevcomp
+# 并在 ~/.claude/settings.json 的 env 加: CLAUDE_CODE_ENABLE_FUNCTION_HOOKS=1, TYPESAFE_API_KEY=<你的key>
 ```
 
 ## 触发方式（自动 vs 手动）
@@ -90,7 +97,7 @@ claude plugin marketplace add <本仓库路径> && claude plugin install jevcomp
 ```sh
 git clone https://github.com/liqunqun07/jevcomp.git && cd jevcomp
 python3 -m pip install --user .        # 得到全局 jevcomp 命令
-# 或不安装: export PYTHONPATH=<仓库目录> 后用 python3 -m jevcomp
+# 或不安装: export PYTHONPATH=$PWD 后用 python3 -m jevcomp（在 jevcomp 目录内）
 ```
 
 API key 解析顺序：`--api-key` > 环境变量 `TYPESAFE_API_KEY` > `~/.jevcomp.json`。
@@ -101,7 +108,7 @@ API key 解析顺序：`--api-key` > 环境变量 `TYPESAFE_API_KEY` > `~/.jevco
 ## CLI 用法
 
 ```sh
-cd <仓库目录>   # 或 export PYTHONPATH=<仓库目录>（见上）
+cd jevcomp   # git clone 后的仓库目录
 jevcomp=("/usr/bin/python3 -m jevcomp")             # 下文简写 jevcomp
 
 jevcomp claude  <session.jsonl>                 # 输出 <file>.jevcomp.jsonl（原文件不动）
@@ -124,7 +131,7 @@ jevcomp <fmt> ... --stdout                      # 压缩结果打到 stdout
 ```sh
 # 需 Claude Code ≥ 2.1.274（function hooks, early access）
 # ~/.claude/settings.json → env: CLAUDE_CODE_ENABLE_FUNCTION_HOOKS=1, TYPESAFE_API_KEY=<key>
-claude plugin marketplace add <本仓库路径>
+claude plugin marketplace add liqunqun07/jevcomp   # 或本地路径
 claude plugin install jevcomp@jevcomp
 ```
 
@@ -139,7 +146,7 @@ claude plugin install jevcomp@jevcomp
 ## 测试
 
 ```sh
-cd <仓库目录>
+cd jevcomp
 /usr/bin/python3 -m unittest discover -s tests     # 核心算法（fake asker，不打网络）
 /usr/local/bin/node tests/test_hook.mjs            # 插件 hook（本地 mock Jev）
 ~/.local/bin/claude plugin validate .claude-plugin/plugin.json
