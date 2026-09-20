@@ -1,0 +1,11 @@
+{
+  "name": "jevcomp",
+  "version": "0.1.0",
+  "description": "Agent-universal Jev compaction: Python CLI + Claude Code function-hook plugin",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test:hook": "node tests/test_hook.mjs",
+    "test:py": "python3 -m unittest discover -s tests"
+  }
+}

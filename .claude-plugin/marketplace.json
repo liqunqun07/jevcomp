@@ -1,0 +1,16 @@
+{
+  "name": "jevcomp",
+  "owner": {
+    "name": "liqunqun07",
+    "url": "https://github.com/liqunqun07"
+  },
+  "plugins": [
+    {
+      "name": "jevcomp",
+      "source": "./",
+      "description": "Agent-universal Jev compaction for Claude Code (deletion instead of summary).",
+      "version": "0.1.0",
+      "license": "MIT"
+    }
+  ]
+}
