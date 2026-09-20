@@ -71,6 +71,109 @@ claude plugin marketplace add liqunqun07/jevcomp && claude plugin install jevcom
 
 唯一硬性要求：一个 TypeSafe（Jev）API key。Claude Code 插件另需 ≥ 2.1.274（function hooks 为 early access）。
 
+## 逐端配置（全部可直接复制）
+
+> 把 `<你的key>` 换成你的 TypeSafe API key；`/path/to/jevcomp` 换成你 clone 的目录
+> （若已 `pip install`，MCP 配置里的 `command` 可直接写 `jevcomp`，无需 PYTHONPATH）。
+
+### Claude Code
+
+插件（`/compact` 与自动压缩走 Jev）：
+
+```sh
+git clone https://github.com/liqunqun07/jevcomp.git && cd jevcomp
+claude plugin marketplace add liqunqun07/jevcomp && claude plugin install jevcomp@jevcomp
+```
+
+在 `~/.claude/settings.json` 的 `env` 对象里加两个键（文件里已有其他键就不用动）：
+
+```json
+{
+  "env": {
+    "CLAUDE_CODE_ENABLE_FUNCTION_HOOKS": "1",
+    "TYPESAFE_API_KEY": "<你的key>"
+  }
+}
+```
+
+MCP（agent 自主调用 `jevcomp_*` 工具）：
+
+```sh
+claude mcp add jevcomp --scope user -- python3 -m jevcomp mcp
+# 或指定仓库路径（未 pip 安装时）：
+claude mcp add jevcomp --scope user --env PYTHONPATH=/path/to/jevcomp -- /usr/bin/python3 -m jevcomp mcp
+```
+
+skill：
+
+```sh
+cp -R skill ~/.agents/skills/jev-compaction && ln -sfn ~/.agents/skills/jev-compaction ~/.claude/skills/jev-compaction
+```
+
+### zcode
+
+编辑 `~/.zcode/cli/config.json`，合并进 `mcp.servers`（保留原有内容）：
+
+```json
+{
+  "mcp": {
+    "servers": {
+      "jevcomp": {
+        "type": "stdio",
+        "command": "/usr/bin/python3",
+        "args": ["-m", "jevcomp", "mcp"],
+        "env": { "PYTHONPATH": "/path/to/jevcomp" }
+      }
+    }
+  }
+}
+```
+
+skill 复制到 `~/.agents/skills/jev-compaction/`（同上）。重启 zcode 后 Settings → MCP 里应看到 `jevcomp` 已连接。
+
+### OpenAI Codex CLI
+
+编辑 `~/.codex/config.toml`，追加：
+
+```toml
+[mcp_servers.jevcomp]
+command = "/usr/bin/python3"
+args = ["-m", "jevcomp", "mcp"]
+env = { "PYTHONPATH" = "/path/to/jevcomp" }
+```
+
+（可选）在 `~/.codex/AGENTS.md` 追加使用指引，让 Codex 知道何时自主调用：
+
+```markdown
+## Context compaction (jevcomp)
+
+The `jevcomp` MCP server provides jevcomp_list_sessions, jevcomp_compact and
+jevcomp_autopilot. Use them when a session feels heavy, the user asks to
+compact/clean up context, or before resuming a large old rollout: prefer
+dry_run=true first, show the stats, then run with dry_run=false.
+```
+
+### 其他 MCP 客户端（Gemini CLI / Continue / Cline / Cursor / Windsurf…）
+
+通用 stdio 配置（按各客户端格式填写同样内容）：
+
+```json
+{
+  "command": "/usr/bin/python3",
+  "args": ["-m", "jevcomp", "mcp"],
+  "env": { "PYTHONPATH": "/path/to/jevcomp" }
+}
+```
+
+### 定时后台压缩（macOS，可选）
+
+```sh
+sed "s#__JEVCOMP_HOME__#$PWD#g" launchd/com.jevcomp.autopilot.plist \
+  > ~/Library/LaunchAgents/com.jevcomp.autopilot.plist
+launchctl load ~/Library/LaunchAgents/com.jevcomp.autopilot.plist
+# 每天 03:00 / 15:00 自动压缩已结束的大会话；手动试跑: python3 -m jevcomp autopilot --dry-run
+```
+
 ## 实测数据（2026-09-20，真实 API）
 
 | 场景 | 结果 |
@@ -159,6 +262,14 @@ cd jevcomp
   Anthropic/智谱基础设施内不同，敏感会话请勿使用。
 - 概率是校准信号不是保证；真正关键的信息应放在首条/最近 N 条的钉死区，或让模型显式写入文件。
 - token 数是估算法（非 tokenizer），已按 Jev 用量校准（偏高 2–18%）。
+
+## 发布检查清单（每次更新仓库前过一遍）
+
+1. `grep -rn "apikey_" .` 与个人路径/用户名扫描 → 必须为零（key 只放 `~/.jevcomp.json`，永不入库）。
+2. README 里所有命令必须**整段可直接复制执行**：真实 URL、无 `<占位符>`（示例中的可变值统一用
+   `<你的key>`、`/path/to/jevcomp` 并在旁边注明替换方法）。
+3. 表述定性为"基于 fast-jev-compaction 设计改造、支持多 agent"，不写"移植"。
+4. `python3 -m unittest discover -s tests` 与 `node tests/test_hook.mjs` 全绿后再 push。
 
 ## 致谢
 
