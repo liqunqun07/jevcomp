@@ -255,22 +255,6 @@ cd jevcomp
 ~/.local/bin/claude plugin validate .claude-plugin/plugin.json
 ```
 
-## 限制与隐私
-
-- 只有工具调用/结果是删除候选；用户与助手文本在输出中永不改写（仅 Jev 看到的 state 里会收缩）。
-- 压缩会把工具调用历史（路径、命令、输出摘要）发送到 TypeSafe 第三方 API —— 信任边界与留在
-  Anthropic/智谱基础设施内不同，敏感会话请勿使用。
-- 概率是校准信号不是保证；真正关键的信息应放在首条/最近 N 条的钉死区，或让模型显式写入文件。
-- token 数是估算法（非 tokenizer），已按 Jev 用量校准（偏高 2–18%）。
-
-## 发布检查清单（每次更新仓库前过一遍）
-
-1. `grep -rn "apikey_" .` 与个人路径/用户名扫描 → 必须为零（key 只放 `~/.jevcomp.json`，永不入库）。
-2. README 里所有命令必须**整段可直接复制执行**：真实 URL、无 `<占位符>`（示例中的可变值统一用
-   `<你的key>`、`/path/to/jevcomp` 并在旁边注明替换方法）。
-3. 表述定性为"基于 fast-jev-compaction 设计改造、支持多 agent"，不写"移植"。
-4. `python3 -m unittest discover -s tests` 与 `node tests/test_hook.mjs` 全绿后再 push。
-
 ## 致谢
 
 算法设计源自 [tamaratran/fast-jev-compaction](https://github.com/tamaratran/fast-jev-compaction)（MIT），jevcomp 在其基础上改造并扩展支持多个 agent。
